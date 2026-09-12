@@ -8,13 +8,18 @@ export default function PostDetail() {
   const { id } = useParams()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [comments, setComments] = useState([])
+  const [newComment, setNewComment] = useState('')
   const [showReportForm, setShowReportForm] = useState(false)
   const [reportReason, setReportReason] = useState('adult_content')
   const [reportDetails, setReportDetails] = useState('')
   const [reportMessage, setReportMessage] = useState('')
 
   useEffect(() => {
-    fetchPost()
+    init()
   }, [id])
 
   useEffect(() => {
@@ -29,21 +34,87 @@ export default function PostDetail() {
     }
   }, [post])
 
-  const handleReport = async () => {
+  const init = async () => {
     const { data: { user } } = await supabase.auth.getUser()
+    setUser(user)
+    await fetchPost(user)
+    await fetchComments()
+  }
 
+  const fetchPost = async (currentUser) => {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*, profiles(username), likes(user_id)')
+      .eq('id', id)
+      .single()
+
+    if (!error && data) {
+      setPost(data)
+      setLikeCount(data.likes.length)
+      if (currentUser) {
+        setLiked(data.likes.some((l) => l.user_id === currentUser.id))
+      }
+      await supabase.rpc('increment_views', { post_id: id })
+    }
+    setLoading(false)
+  }
+
+  const fetchComments = async () => {
+    const { data } = await supabase
+      .from('comments')
+      .select('*, profiles(username)')
+      .eq('post_id', id)
+      .order('created_at', { ascending: true })
+    setComments(data || [])
+  }
+
+  const toggleLike = async () => {
+    if (!user) {
+      window.location.href = '/login'
+      return
+    }
+    if (liked) {
+      await supabase.from('likes').delete().eq('post_id', id).eq('user_id', user.id)
+      setLiked(false)
+      setLikeCount((c) => c - 1)
+    } else {
+      await supabase.from('likes').insert({ post_id: id, user_id: user.id })
+      setLiked(true)
+      setLikeCount((c) => c + 1)
+    }
+  }
+
+  const handleAddComment = async (e) => {
+    e.preventDefault()
+    if (!user) {
+      window.location.href = '/login'
+      return
+    }
+    if (!newComment.trim()) return
+
+    const { error } = await supabase.from('comments').insert({
+      post_id: id,
+      user_id: user.id,
+      content: newComment.trim(),
+    })
+
+    if (!error) {
+      setNewComment('')
+      fetchComments()
+    }
+  }
+
+  const handleReport = async () => {
     if (!user) {
       setReportMessage('You must be logged in to report.')
       return
     }
-
     const { error } = await supabase.from('reports').insert({
       post_id: post.id,
       reported_by: user.id,
       reason: reportReason,
       details: reportDetails,
     })
-
     if (error) {
       setReportMessage('Error: ' + error.message)
     } else {
@@ -53,84 +124,139 @@ export default function PostDetail() {
     }
   }
 
-  const fetchPost = async () => {
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*, profiles(username)')
-      .eq('id', id)
-      .single()
-
-    if (!error && data) {
-      setPost(data)
-      await supabase.rpc('increment_views', { post_id: id })
-    }
-    setLoading(false)
-  }
-
-  if (loading) return <p style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</p>
-  if (!post) return <p style={{ textAlign: 'center', marginTop: '50px' }}>Post not found</p>
+  if (loading) return <p style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading...</p>
+  if (!post) return <p style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Post not found</p>
 
   return (
-    <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
-      <Link href="/" style={{ color: '#7C3AED' }}>← Back to Feed</Link>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
+        <Link href="/" style={{ color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>← Back to Feed</Link>
 
-      <div style={{ marginTop: '15px', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
-        <div style={{ padding: '10px', fontWeight: 'bold' }}>
-          @{post.profiles?.username || 'unknown'}
-        </div>
-        <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
-        <div style={{ padding: '10px' }}>
-          <p>{post.caption}</p>
-          <p style={{ fontSize: '13px', color: '#888', marginTop: '8px' }}>
-            {post.views} views
-          </p>
-        </div>
-      </div>
+        <div style={{ marginTop: '15px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '16px', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '34px', height: '34px', borderRadius: '50%', background: 'var(--accent)',
+              color: 'var(--accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: '700', fontSize: '14px'
+            }}>
+              {(post.profiles?.username || 'U')[0].toUpperCase()}
+            </div>
+            <span style={{ fontWeight: '600', fontSize: '14px' }}>@{post.profiles?.username || 'unknown'}</span>
+          </div>
 
-      <div id="container-e3dc98eab42d242863668d5a88b0b4ae" style={{ marginTop: '20px' }}></div>
+          <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
 
-      <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-        {!showReportForm ? (
-          <button
-            onClick={() => setShowReportForm(true)}
-            style={{ background: 'none', border: '1px solid #ccc', padding: '6px 12px', borderRadius: '6px', color: '#666', cursor: 'pointer' }}
-          >
-            🚩 Report this post
-          </button>
-        ) : (
-          <div style={{ background: '#fafafa', padding: '15px', borderRadius: '8px' }}>
-            <p style={{ fontWeight: 'bold', marginBottom: '10px' }}>Reason for reporting:</p>
-            <select
-              value={reportReason}
-              onChange={(e) => setReportReason(e.target.value)}
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+          <div style={{ padding: '10px 16px 4px', display: 'flex', alignItems: 'center', gap: '18px' }}>
+            <button
+              onClick={toggleLike}
+              style={{
+                background: 'none', border: 'none', padding: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                fontSize: '13px', color: liked ? 'var(--danger)' : 'var(--text-muted)', fontWeight: '600'
+              }}
             >
-              <option value="adult_content">Adult / Explicit Content</option>
-              <option value="copyright">Copyright Issue</option>
-              <option value="spam">Spam</option>
-              <option value="other">Other</option>
-            </select>
-            <textarea
-              placeholder="Details (optional)"
-              value={reportDetails}
-              onChange={(e) => setReportDetails(e.target.value)}
-              style={{ width: '100%', padding: '8px', marginBottom: '10px', minHeight: '60px' }}
+              <span style={{ fontSize: '18px' }}>{liked ? '❤️' : '🤍'}</span>
+              {likeCount}
+            </button>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>
+              💬 {comments.length}
+            </span>
+          </div>
+
+          <div style={{ padding: '6px 16px 14px' }}>
+            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>{post.caption}</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: 0 }}>
+              {post.views} views
+            </p>
+          </div>
+        </div>
+
+        <div id="container-e3dc98eab42d242863668d5a88b0b4ae" style={{ marginTop: '20px' }}></div>
+
+        {/* Comments Section */}
+        <div style={{ marginTop: '20px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>
+            Comments ({comments.length})
+          </h3>
+
+          <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <input
+              type="text"
+              placeholder={user ? "Write a comment..." : "Login to comment"}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              disabled={!user}
+              style={{ flex: 1, padding: '10px' }}
             />
             <button
-              onClick={handleReport}
-              style={{ background: '#dc2626', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '6px', marginRight: '10px' }}
+              type="submit"
+              disabled={!user}
+              style={{ background: 'var(--accent)', color: 'var(--accent-text)', border: 'none', padding: '0 18px' }}
             >
-              Submit Report
+              Post
             </button>
+          </form>
+
+          {comments.length === 0 && (
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No comments yet. Be the first to comment.</p>
+          )}
+
+          {comments.map((c) => (
+            <div key={c.id} style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent)',
+                color: 'var(--accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: '700', fontSize: '12px', flexShrink: 0
+              }}>
+                {(c.profiles?.username || 'U')[0].toUpperCase()}
+              </div>
+              <div>
+                <span style={{ fontWeight: '600', fontSize: '13px', marginRight: '6px' }}>
+                  @{c.profiles?.username || 'unknown'}
+                </span>
+                <span style={{ fontSize: '13px' }}>{c.content}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Report Section */}
+        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '15px' }}>
+          {!showReportForm ? (
             <button
-              onClick={() => setShowReportForm(false)}
-              style={{ background: 'none', border: 'none', color: '#666' }}
+              onClick={() => setShowReportForm(true)}
+              style={{ background: 'none', border: '1px solid var(--border)', padding: '6px 12px', color: 'var(--text-muted)', fontWeight: '500' }}
             >
-              Cancel
+              🚩 Report this post
             </button>
-            {reportMessage && <p style={{ marginTop: '10px', color: 'green' }}>{reportMessage}</p>}
-          </div>
-        )}
+          ) : (
+            <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '15px', borderRadius: '12px' }}>
+              <p style={{ fontWeight: '600', marginBottom: '10px', fontSize: '14px' }}>Reason for reporting:</p>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              >
+                <option value="adult_content">Adult / Explicit Content</option>
+                <option value="copyright">Copyright Issue</option>
+                <option value="spam">Spam</option>
+                <option value="other">Other</option>
+              </select>
+              <textarea
+                placeholder="Details (optional)"
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+                style={{ width: '100%', padding: '8px', marginBottom: '10px', minHeight: '60px' }}
+              />
+              <button onClick={handleReport} style={{ background: 'var(--danger)', color: 'white', padding: '8px 16px', border: 'none', marginRight: '10px' }}>
+                Submit Report
+              </button>
+              <button onClick={() => setShowReportForm(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)' }}>
+                Cancel
+              </button>
+              {reportMessage && <p style={{ marginTop: '10px', color: 'var(--success)', fontSize: '13px' }}>{reportMessage}</p>}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
