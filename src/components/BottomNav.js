@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Home, PlusSquare, Wallet } from 'lucide-react'
 
 export default function BottomNav({ user }) {
   const pathname = usePathname()
@@ -8,9 +9,9 @@ export default function BottomNav({ user }) {
   if (!user) return null
 
   const items = [
-    { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/upload', label: 'Upload', icon: '➕' },
-    { href: '/wallet', label: 'Wallet', icon: '💰' },
+    { href: '/', label: 'Home', Icon: Home },
+    { href: '/upload', label: 'Upload', Icon: PlusSquare },
+    { href: '/wallet', label: 'Wallet', Icon: Wallet },
   ]
 
   return (
@@ -27,21 +28,22 @@ export default function BottomNav({ user }) {
       maxWidth: '500px',
       margin: '0 auto',
     }}>
-      {items.map((item) => (
+      {items.map(({ href, label, Icon }) => (
         <Link
-          key={item.href}
-          href={item.href}
+          key={href}
+          href={href}
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            gap: '2px',
             fontSize: '11px',
-            color: pathname === item.href ? 'var(--accent)' : 'var(--text-muted)',
-            fontWeight: pathname === item.href ? '700' : '400',
+            color: pathname === href ? 'var(--accent)' : 'var(--text-muted)',
+            fontWeight: pathname === href ? '700' : '400',
           }}
         >
-          <span style={{ fontSize: '20px' }}>{item.icon}</span>
-          {item.label}
+          <Icon size={22} strokeWidth={pathname === href ? 2.5 : 2} />
+          {label}
         </Link>
       ))}
     </div>

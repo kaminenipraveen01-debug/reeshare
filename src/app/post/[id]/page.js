@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
+import { Heart, MessageCircle, Flag } from 'lucide-react'
 
 export default function PostDetail() {
   const { id } = useParams()
@@ -154,12 +155,12 @@ export default function PostDetail() {
                 fontSize: '13px', color: liked ? 'var(--danger)' : 'var(--text-muted)', fontWeight: '600'
               }}
             >
-              <span style={{ fontSize: '18px' }}>{liked ? '❤️' : '🤍'}</span>
-              {likeCount}
+              <Heart size={20} fill={liked ? 'var(--danger)' : 'none'} color={liked ? 'var(--danger)' : 'var(--text-muted)'} />
+{likeCount}
             </button>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>
-              💬 {comments.length}
-            </span>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <MessageCircle size={20} /> {comments.length}
+</span>
           </div>
 
           <div style={{ padding: '6px 16px 14px' }}>
@@ -223,11 +224,11 @@ export default function PostDetail() {
         <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '15px' }}>
           {!showReportForm ? (
             <button
-              onClick={() => setShowReportForm(true)}
-              style={{ background: 'none', border: '1px solid var(--border)', padding: '6px 12px', color: 'var(--text-muted)', fontWeight: '500' }}
-            >
-              🚩 Report this post
-            </button>
+  onClick={() => setShowReportForm(true)}
+  style={{ background: 'none', border: '1px solid var(--border)', padding: '6px 12px', color: 'var(--text-muted)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}
+>
+  <Flag size={16} /> Report this post
+</button>
           ) : (
             <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '15px', borderRadius: '12px' }}>
               <p style={{ fontWeight: '600', marginBottom: '10px', fontSize: '14px' }}>Reason for reporting:</p>

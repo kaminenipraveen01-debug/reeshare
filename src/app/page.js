@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
+import { Heart, MessageCircle } from 'lucide-react'
 
 export default function Home() {
   const [posts, setPosts] = useState([])
@@ -131,13 +132,13 @@ export default function Home() {
                   fontSize: '13px', color: likedPosts[post.id] ? 'var(--danger)' : 'var(--text-muted)', fontWeight: '600'
                 }}
               >
-                <span style={{ fontSize: '18px' }}>{likedPosts[post.id] ? '❤️' : '🤍'}</span>
-                {post.likes?.length || 0}
+                <Heart size={20} fill={likedPosts[post.id] ? 'var(--danger)' : 'none'} color={likedPosts[post.id] ? 'var(--danger)' : 'var(--text-muted)'} />
+{post.likes?.length || 0}
               </button>
 
               <Link href={`/post/${post.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>
-                💬 Comment
-              </Link>
+  <MessageCircle size={20} /> Comment
+</Link>
             </div>
 
             <div style={{ padding: '6px 16px 14px' }}>
