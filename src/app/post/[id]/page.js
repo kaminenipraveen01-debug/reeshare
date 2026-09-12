@@ -21,13 +21,10 @@ export default function PostDetail() {
       .single()
 
     if (!error && data) {
-      setPost(data)
-      // View count పెంచడం
-      await supabase
-        .from('posts')
-        .update({ views: (data.views || 0) + 1 })
-        .eq('id', id)
-    }
+  setPost(data)
+  // View count పెంచడం (safe function ద్వారా)
+  await supabase.rpc('increment_views', { post_id: id })
+}
     setLoading(false)
   }
 
