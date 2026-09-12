@@ -10,16 +10,20 @@ export default function PostDetail() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-  fetchPost()
-}, [id])
+    fetchPost()
+  }, [id])
 
-useEffect(() => {
-  const script = document.createElement('script')
-  script.async = true
-  script.setAttribute('data-cfasync', 'false')
-  script.src = 'https://pl31302691.profitableratecpmnetwork.com/e3dc98eab42d242863668d5a88b0b4ae/invoke.js'
-  document.getElementById('container-e3dc98eab42d242863668d5a88b0b4ae')?.appendChild(script)
-}, [id])
+  useEffect(() => {
+    if (!post) return
+    const container = document.getElementById('container-e3dc98eab42d242863668d5a88b0b4ae')
+    if (container && container.childElementCount === 0) {
+      const script = document.createElement('script')
+      script.async = true
+      script.setAttribute('data-cfasync', 'false')
+      script.src = 'https://pl31302691.profitableratecpmnetwork.com/e3dc98eab42d242863668d5a88b0b4ae/invoke.js'
+      container.appendChild(script)
+    }
+  }, [post])
 
   const fetchPost = async () => {
     const { data, error } = await supabase
@@ -29,10 +33,9 @@ useEffect(() => {
       .single()
 
     if (!error && data) {
-  setPost(data)
-  // View count పెంచడం (safe function ద్వారా)
-  await supabase.rpc('increment_views', { post_id: id })
-}
+      setPost(data)
+      await supabase.rpc('increment_views', { post_id: id })
+    }
     setLoading(false)
   }
 
@@ -56,7 +59,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Ad ఇక్కడ Phase 4 లో వస్తుంది */}
       <div id="container-e3dc98eab42d242863668d5a88b0b4ae" style={{ marginTop: '20px' }}></div>
     </div>
   )
