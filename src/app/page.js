@@ -45,6 +45,7 @@ export default function Home() {
           {user ? (
             <>
               <Link href="/upload" style={{ marginRight: '15px' }}>Upload</Link>
+<Link href="/wallet" style={{ marginRight: '15px' }}>Wallet</Link>
               <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Logout</button>
             </>
           ) : (
