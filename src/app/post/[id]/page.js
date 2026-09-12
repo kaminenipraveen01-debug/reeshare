@@ -10,8 +10,16 @@ export default function PostDetail() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchPost()
-  }, [id])
+  fetchPost()
+}, [id])
+
+useEffect(() => {
+  const script = document.createElement('script')
+  script.async = true
+  script.setAttribute('data-cfasync', 'false')
+  script.src = 'https://pl31302691.profitableratecpmnetwork.com/e3dc98eab42d242863668d5a88b0b4ae/invoke.js'
+  document.getElementById('container-e3dc98eab42d242863668d5a88b0b4ae')?.appendChild(script)
+}, [id])
 
   const fetchPost = async () => {
     const { data, error } = await supabase
@@ -49,9 +57,7 @@ export default function PostDetail() {
       </div>
 
       {/* Ad ఇక్కడ Phase 4 లో వస్తుంది */}
-      <div style={{ marginTop: '20px', padding: '15px', border: '1px dashed #ccc', textAlign: 'center', color: '#999' }}>
-        Ad space (Phase 4 లో add చేస్తాం)
-      </div>
+      <div id="container-e3dc98eab42d242863668d5a88b0b4ae" style={{ marginTop: '20px' }}></div>
     </div>
   )
 }
