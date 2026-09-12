@@ -72,9 +72,12 @@ export default function Home() {
       <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <span style={{ fontSize: '22px', fontWeight: '800', color: 'var(--accent)', letterSpacing: '-0.5px' }}>
-            Reeshare
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <img src="/logo.png" alt="Reeshare" style={{ width: '30px', height: '30px' }} />
+  <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+    Reeshare
+  </span>
+</div>
           {!user && (
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <Link href="/login" style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Login</Link>
