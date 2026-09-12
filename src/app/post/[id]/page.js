@@ -8,6 +8,10 @@ export default function PostDetail() {
   const { id } = useParams()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showReportForm, setShowReportForm] = useState(false)
+  const [reportReason, setReportReason] = useState('adult_content')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportMessage, setReportMessage] = useState('')
 
   useEffect(() => {
     fetchPost()
@@ -24,6 +28,30 @@ export default function PostDetail() {
       container.appendChild(script)
     }
   }, [post])
+
+  const handleReport = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      setReportMessage('You must be logged in to report.')
+      return
+    }
+
+    const { error } = await supabase.from('reports').insert({
+      post_id: post.id,
+      reported_by: user.id,
+      reason: reportReason,
+      details: reportDetails,
+    })
+
+    if (error) {
+      setReportMessage('Error: ' + error.message)
+    } else {
+      setReportMessage('Report submitted. Our team will review it.')
+      setShowReportForm(false)
+      setReportDetails('')
+    }
+  }
 
   const fetchPost = async () => {
     const { data, error } = await supabase
@@ -60,6 +88,50 @@ export default function PostDetail() {
       </div>
 
       <div id="container-e3dc98eab42d242863668d5a88b0b4ae" style={{ marginTop: '20px' }}></div>
+
+      <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+        {!showReportForm ? (
+          <button
+            onClick={() => setShowReportForm(true)}
+            style={{ background: 'none', border: '1px solid #ccc', padding: '6px 12px', borderRadius: '6px', color: '#666', cursor: 'pointer' }}
+          >
+            🚩 Report this post
+          </button>
+        ) : (
+          <div style={{ background: '#fafafa', padding: '15px', borderRadius: '8px' }}>
+            <p style={{ fontWeight: 'bold', marginBottom: '10px' }}>Reason for reporting:</p>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            >
+              <option value="adult_content">Adult / Explicit Content</option>
+              <option value="copyright">Copyright Issue</option>
+              <option value="spam">Spam</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea
+              placeholder="Details (optional)"
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              style={{ width: '100%', padding: '8px', marginBottom: '10px', minHeight: '60px' }}
+            />
+            <button
+              onClick={handleReport}
+              style={{ background: '#dc2626', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '6px', marginRight: '10px' }}
+            >
+              Submit Report
+            </button>
+            <button
+              onClick={() => setShowReportForm(false)}
+              style={{ background: 'none', border: 'none', color: '#666' }}
+            >
+              Cancel
+            </button>
+            {reportMessage && <p style={{ marginTop: '10px', color: 'green' }}>{reportMessage}</p>}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

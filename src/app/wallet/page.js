@@ -54,12 +54,12 @@ export default function Wallet() {
     setMessage('')
 
     if (!profile || profile.available_balance < 1000) {
-      setMessage('₹1000 కంటే తక్కువ balance ఉంది కాబట్టి withdraw చేయలేరు.')
+      setMessage('You need at least ₹1000 balance to withdraw.')
       return
     }
 
     if (!upiDetails.trim()) {
-      setMessage('UPI ID లేదా bank details ఇవ్వండి.')
+      setMessage('Please enter your UPI ID or bank details.')
       return
     }
 
@@ -77,7 +77,7 @@ export default function Wallet() {
     if (error) {
       setMessage('Error: ' + error.message)
     } else {
-      setMessage('Withdrawal request పంపబడింది! Admin approve చేసిన తర్వాత money వస్తుంది.')
+      setMessage('Withdrawal request sent! You will receive the money after admin approval.')
       setUpiDetails('')
       fetchWalletData()
     }
@@ -120,16 +120,16 @@ export default function Wallet() {
           >
             {requesting ? 'Sending...' : `Withdraw ₹${profile.available_balance.toFixed(2)}`}
           </button>
-          {message && <p style={{ color: message.includes('Error') || message.includes('తక్కువ') ? 'red' : 'green', marginTop: '10px' }}>{message}</p>}
+          {message && <p style={{ color: message.includes('Error') || message.includes('need') ? 'red' : 'green', marginTop: '10px' }}>{message}</p>}
         </form>
       ) : (
         <p style={{ color: '#888', marginBottom: '30px' }}>
-          ₹1000 balance చేరుకున్నాక withdraw button కనిపిస్తుంది. (Current: ₹{profile?.available_balance?.toFixed(2) || '0.00'})
+          The withdraw button appears once your balance reaches ₹1000. (Current: ₹{profile?.available_balance?.toFixed(2) || '0.00'})
         </p>
       )}
 
       <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>Earnings History</h2>
-      {earnings.length === 0 && <p style={{ color: '#888' }}>ఇంకా earnings లేవు.</p>}
+      {earnings.length === 0 && <p style={{ color: '#888' }}>No earnings yet.</p>}
       {earnings.map((e) => (
         <div key={e.id} style={{ padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between' }}>
           <span>{e.posts?.caption || 'Post'} — {e.period_month}</span>
@@ -138,7 +138,7 @@ export default function Wallet() {
       ))}
 
       <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '20px 0 10px' }}>Withdrawal History</h2>
-      {withdrawals.length === 0 && <p style={{ color: '#888' }}>ఇంకా withdrawals లేవు.</p>}
+      {withdrawals.length === 0 && <p style={{ color: '#888' }}>No withdrawals yet.</p>}
       {withdrawals.map((w) => (
         <div key={w.id} style={{ padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between' }}>
           <span>₹{w.amount} — {new Date(w.requested_at).toLocaleDateString()}</span>

@@ -47,7 +47,7 @@ export default function Signup() {
   return (
     <div style={{ maxWidth: '400px', margin: '80px auto', padding: '20px' }}>
       <h1 style={{ fontSize: '24px', marginBottom: '20px', fontWeight: 'bold', color: '#7C3AED' }}>Reeshare</h1>
-<p style={{ color: '#666', marginBottom: '20px' }}>Create your account</p>
+      <p style={{ color: '#666', marginBottom: '20px' }}>Create your account</p>
       <form onSubmit={handleSignup}>
         <input
           type="text"

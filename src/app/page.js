@@ -39,13 +39,12 @@ export default function Home() {
   return (
     <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', marginBottom: '20px', fontWeight: 'bold', color: '#7C3AED' }}>Reeshare</h1>
-<p style={{ color: '#666', marginBottom: '20px' }}>Login to continue</p>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#7C3AED' }}>Reeshare</h1>
         <div>
           {user ? (
             <>
               <Link href="/upload" style={{ marginRight: '15px' }}>Upload</Link>
-<Link href="/wallet" style={{ marginRight: '15px' }}>Wallet</Link>
+              <Link href="/wallet" style={{ marginRight: '15px' }}>Wallet</Link>
               <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Logout</button>
             </>
           ) : (
@@ -66,8 +65,8 @@ export default function Home() {
             @{post.profiles?.username || 'unknown'}
           </div>
           <Link href={`/post/${post.id}`}>
-  <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block', cursor: 'pointer' }} />
-</Link>
+            <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block', cursor: 'pointer' }} />
+          </Link>
           <div style={{ padding: '10px' }}>
             <p>{post.caption}</p>
             <p style={{ fontSize: '12px', color: '#888' }}>{post.views} views</p>
