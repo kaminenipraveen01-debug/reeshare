@@ -64,7 +64,9 @@ export default function Home() {
           <div style={{ padding: '10px', fontWeight: 'bold' }}>
             @{post.profiles?.username || 'unknown'}
           </div>
-          <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
+          <Link href={`/post/${post.id}`}>
+  <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block', cursor: 'pointer' }} />
+</Link>
           <div style={{ padding: '10px' }}>
             <p>{post.caption}</p>
             <p style={{ fontSize: '12px', color: '#888' }}>{post.views} views</p>

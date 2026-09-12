@@ -1,0 +1,60 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
+import Link from 'next/link'
+
+export default function PostDetail() {
+  const { id } = useParams()
+  const [post, setPost] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPost()
+  }, [id])
+
+  const fetchPost = async () => {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*, profiles(username)')
+      .eq('id', id)
+      .single()
+
+    if (!error && data) {
+      setPost(data)
+      // View count పెంచడం
+      await supabase
+        .from('posts')
+        .update({ views: (data.views || 0) + 1 })
+        .eq('id', id)
+    }
+    setLoading(false)
+  }
+
+  if (loading) return <p style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</p>
+  if (!post) return <p style={{ textAlign: 'center', marginTop: '50px' }}>Post not found</p>
+
+  return (
+    <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
+      <Link href="/" style={{ color: '#7C3AED' }}>← Back to Feed</Link>
+
+      <div style={{ marginTop: '15px', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+        <div style={{ padding: '10px', fontWeight: 'bold' }}>
+          @{post.profiles?.username || 'unknown'}
+        </div>
+        <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
+        <div style={{ padding: '10px' }}>
+          <p>{post.caption}</p>
+          <p style={{ fontSize: '13px', color: '#888', marginTop: '8px' }}>
+            {post.views} views
+          </p>
+        </div>
+      </div>
+
+      {/* Ad ఇక్కడ Phase 4 లో వస్తుంది */}
+      <div style={{ marginTop: '20px', padding: '15px', border: '1px dashed #ccc', textAlign: 'center', color: '#999' }}>
+        Ad space (Phase 4 లో add చేస్తాం)
+      </div>
+    </div>
+  )
+}
