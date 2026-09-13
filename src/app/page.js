@@ -8,40 +8,65 @@ import { Heart, MessageCircle } from 'lucide-react'
 
 export default function Home() {
   const [posts, setPosts] = useState([])
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [likedPosts, setLikedPosts] = useState({})
+const [user, setUser] = useState(null)
+const [loading, setLoading] = useState(true)
+const [likedPosts, setLikedPosts] = useState({})
+const [activeTab, setActiveTab] = useState('forYou')
 
   useEffect(() => {
     init()
   }, [])
 
   const init = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
-    await fetchPosts(user)
-  }
+  const { data: { user } } = await supabase.auth.getUser()
+  setUser(user)
+  await fetchPosts(user, 'forYou')
+}
 
-  const fetchPosts = async (currentUser) => {
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*, profiles(username), likes(user_id)')
-      .order('created_at', { ascending: false })
+const fetchPosts = async (currentUser, tab) => {
+  setLoading(true)
+  let query = supabase
+    .from('posts')
+    .select('*, profiles(username), likes(user_id)')
+    .order('created_at', { ascending: false })
 
-    if (!error) {
-      setPosts(data)
-      if (currentUser) {
-        const liked = {}
-        data.forEach((post) => {
-          if (post.likes.some((l) => l.user_id === currentUser.id)) {
-            liked[post.id] = true
-          }
-        })
-        setLikedPosts(liked)
-      }
+  if (tab === 'following' && currentUser) {
+    const { data: followingData } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', currentUser.id)
+
+    const followingIds = (followingData || []).map((f) => f.following_id)
+
+    if (followingIds.length === 0) {
+      setPosts([])
+      setLoading(false)
+      return
     }
-    setLoading(false)
+    query = query.in('user_id', followingIds)
   }
+
+  const { data, error } = await query
+
+  if (!error) {
+    setPosts(data)
+    if (currentUser) {
+      const liked = {}
+      data.forEach((post) => {
+        if (post.likes.some((l) => l.user_id === currentUser.id)) {
+          liked[post.id] = true
+        }
+      })
+      setLikedPosts(liked)
+    }
+  }
+  setLoading(false)
+}
+
+const switchTab = (tab) => {
+  setActiveTab(tab)
+  fetchPosts(user, tab)
+}
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -95,6 +120,33 @@ export default function Home() {
             }}>Logout</button>
           )}
         </div>
+
+        {user && (
+  <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+    <button
+      onClick={() => switchTab('forYou')}
+      style={{
+        background: 'none', border: 'none', padding: '10px 0',
+        borderBottom: activeTab === 'forYou' ? '2px solid var(--accent)' : '2px solid transparent',
+        color: activeTab === 'forYou' ? 'var(--text)' : 'var(--text-muted)',
+        fontWeight: activeTab === 'forYou' ? '700' : '500',
+      }}
+    >
+      For You
+    </button>
+    <button
+      onClick={() => switchTab('following')}
+      style={{
+        background: 'none', border: 'none', padding: '10px 0',
+        borderBottom: activeTab === 'following' ? '2px solid var(--accent)' : '2px solid transparent',
+        color: activeTab === 'following' ? 'var(--text)' : 'var(--text-muted)',
+        fontWeight: activeTab === 'following' ? '700' : '500',
+      }}
+    >
+      Following
+    </button>
+  </div>
+)}
 
         {loading && <p style={{ color: 'var(--text-muted)' }}>Loading posts...</p>}
         {!loading && posts.length === 0 && (
