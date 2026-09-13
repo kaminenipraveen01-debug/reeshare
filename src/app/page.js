@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
 import { timeAgo } from '@/lib/timeAgo'
+import { Search, Bell } from 'lucide-react'
 import { Heart, MessageCircle } from 'lucide-react'
 
 export default function Home() {
@@ -114,11 +115,15 @@ const switchTab = (tab) => {
             </div>
           )}
           {user && (
-            <button onClick={handleLogout} style={{
-              background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)',
-              padding: '6px 14px', fontSize: '13px', fontWeight: '500'
-            }}>Logout</button>
-          )}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+    <Search size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => alert('Search coming soon!')} />
+    <Bell size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => alert('Notifications coming soon!')} />
+    <button onClick={handleLogout} style={{
+      background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)',
+      padding: '6px 14px', fontSize: '13px', fontWeight: '500'
+    }}>Logout</button>
+  </div>
+)}
         </div>
 
         {user && (
