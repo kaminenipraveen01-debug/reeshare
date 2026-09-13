@@ -4,10 +4,13 @@ import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import { timeAgo } from '@/lib/timeAgo'
+import { useRouter } from 'next/navigation'
 import { Heart, MessageCircle, Flag } from 'lucide-react'
 
 export default function PostDetail() {
   const { id } = useParams()
+  const router = useRouter()
+const [currentUser, setCurrentUser] = useState(null)
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
@@ -44,6 +47,8 @@ export default function PostDetail() {
   }
 
   const fetchPost = async (currentUser) => {
+    const { data: { user: loggedInUser } } = await supabase.auth.getUser()
+setCurrentUser(loggedInUser)
     const { data, error } = await supabase
       .from('posts')
       .select('*, profiles(username), likes(user_id)')
@@ -188,6 +193,23 @@ export default function PostDetail() {
         </div>
 
         <div id="container-e3dc98eab42d242863668d5a88b0b4ae" style={{ marginTop: '20px' }}></div>
+
+        {currentUser && currentUser.id === post.user_id && !post.is_boosted && (
+  <button
+    onClick={() => router.push(`/boost/${post.id}`)}
+    style={{
+      width: '100%', padding: '10px', margin: '12px 0', background: 'var(--accent)',
+      color: 'var(--accent-text)', border: 'none', fontSize: '13px'
+    }}
+  >
+    🚀 Boost this post
+  </button>
+)}
+{post.is_boosted && (
+  <p style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: '600', margin: '12px 0' }}>
+    🚀 This post is currently boosted
+  </p>
+)}
 
         {/* Comments Section */}
         <div style={{ marginTop: '20px' }}>
