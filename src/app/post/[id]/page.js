@@ -149,7 +149,17 @@ export default function PostDetail() {
 </div>
           </div>
 
-          <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
+          {post.media_type === 'text' ? (
+  <div style={{
+    padding: '50px 24px', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-secondary))',
+    color: 'white', fontSize: '20px', fontWeight: '700', textAlign: 'center'
+  }}>
+    {post.caption}
+  </div>
+) : (
+  <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
+)}
 
           <div style={{ padding: '10px 16px 4px', display: 'flex', alignItems: 'center', gap: '18px' }}>
             <button
@@ -168,7 +178,9 @@ export default function PostDetail() {
           </div>
 
           <div style={{ padding: '6px 16px 14px' }}>
-            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>{post.caption}</p>
+  {post.media_type !== 'text' && (
+    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>{post.caption}</p>
+  )}
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: 0 }}>
               {post.views} views
             </p>
