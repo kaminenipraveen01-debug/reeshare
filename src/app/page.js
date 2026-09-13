@@ -5,6 +5,7 @@ import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
 import { timeAgo } from '@/lib/timeAgo'
 import { Search, Bell } from 'lucide-react'
+import { MoreVertical } from 'lucide-react'
 import { Heart, MessageCircle } from 'lucide-react'
 
 export default function Home() {
@@ -13,6 +14,7 @@ const [user, setUser] = useState(null)
 const [loading, setLoading] = useState(true)
 const [likedPosts, setLikedPosts] = useState({})
 const [activeTab, setActiveTab] = useState('forYou')
+const [openMenuPostId, setOpenMenuPostId] = useState(null)
 
   useEffect(() => {
     init()
@@ -94,6 +96,23 @@ const switchTab = (tab) => {
     }
   }
 
+  const handleReport = async (postId) => {
+  if (!user) {
+    window.location.href = '/login'
+    return
+  }
+  const { error } = await supabase.from('reports').insert({
+    post_id: postId,
+    reported_by: user.id,
+    reason: 'other',
+    details: 'Reported from feed',
+  })
+  if (!error) {
+    alert('Report submitted. Our team will review it.')
+  }
+  setOpenMenuPostId(null)
+}
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: user ? '70px' : '0' }}>
       <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
@@ -168,23 +187,47 @@ const switchTab = (tab) => {
             overflow: 'hidden',
             border: '1px solid var(--border)',
           }}>
-            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '50%', background: 'var(--accent)',
-                color: 'var(--accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: '700', fontSize: '14px'
-              }}>
-                {(post.profiles?.username || 'U')[0].toUpperCase()}
-              </div>
-              <Link href={`/profile/${post.profiles?.username}`}>
-  <div style={{ fontWeight: '600', fontSize: '14px' }}>
-    @{post.profiles?.username || 'unknown'}
+            <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
+  <div style={{
+    width: '34px', height: '34px', borderRadius: '50%', background: 'var(--accent)',
+    color: 'var(--accent-text)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontWeight: '700', fontSize: '14px'
+  }}>
+    {(post.profiles?.username || 'U')[0].toUpperCase()}
   </div>
-  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-    {timeAgo(post.created_at)}
-  </div>
-</Link>
-            </div>
+  <Link href={`/profile/${post.profiles?.username}`} style={{ flex: 1 }}>
+    <div style={{ fontWeight: '600', fontSize: '14px' }}>
+      @{post.profiles?.username || 'unknown'}
+    </div>
+    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+      {timeAgo(post.created_at)}
+    </div>
+  </Link>
+
+  <MoreVertical
+    size={18}
+    color="var(--text-muted)"
+    style={{ cursor: 'pointer' }}
+    onClick={() => setOpenMenuPostId(openMenuPostId === post.id ? null : post.id)}
+  />
+
+  {openMenuPostId === post.id && (
+    <div style={{
+      position: 'absolute', top: '40px', right: '16px', background: 'var(--card-bg)',
+      border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', zIndex: 10,
+    }}>
+      <button
+        onClick={() => handleReport(post.id)}
+        style={{
+          padding: '10px 20px', background: 'none', border: 'none', color: 'var(--danger)',
+          fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap'
+        }}
+      >
+        Report Post
+      </button>
+    </div>
+  )}
+</div>
 
             <Link href={`/post/${post.id}`}>
   {post.media_type === 'text' ? (
