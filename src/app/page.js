@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import BottomNav from '@/components/BottomNav'
+import { timeAgo } from '@/lib/timeAgo'
 import { Heart, MessageCircle } from 'lucide-react'
 
 export default function Home() {
@@ -118,9 +119,14 @@ export default function Home() {
               }}>
                 {(post.profiles?.username || 'U')[0].toUpperCase()}
               </div>
-              <span style={{ fontWeight: '600', fontSize: '14px' }}>
-                @{post.profiles?.username || 'unknown'}
-              </span>
+              <div>
+  <div style={{ fontWeight: '600', fontSize: '14px' }}>
+    @{post.profiles?.username || 'unknown'}
+  </div>
+  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+    {timeAgo(post.created_at)}
+  </div>
+</div>
             </div>
 
             <Link href={`/post/${post.id}`}>
