@@ -119,14 +119,14 @@ export default function Home() {
               }}>
                 {(post.profiles?.username || 'U')[0].toUpperCase()}
               </div>
-              <div>
+              <Link href={`/profile/${post.profiles?.username}`}>
   <div style={{ fontWeight: '600', fontSize: '14px' }}>
     @{post.profiles?.username || 'unknown'}
   </div>
   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
     {timeAgo(post.created_at)}
   </div>
-</div>
+</Link>
             </div>
 
             <Link href={`/post/${post.id}`}>

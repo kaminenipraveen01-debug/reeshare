@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
+import { timeAgo } from '@/lib/timeAgo'
 import { Heart, MessageCircle, Flag } from 'lucide-react'
 
 export default function PostDetail() {
@@ -142,7 +143,10 @@ export default function PostDetail() {
             }}>
               {(post.profiles?.username || 'U')[0].toUpperCase()}
             </div>
-            <span style={{ fontWeight: '600', fontSize: '14px' }}>@{post.profiles?.username || 'unknown'}</span>
+            <div>
+  <div style={{ fontWeight: '600', fontSize: '14px' }}>@{post.profiles?.username || 'unknown'}</div>
+  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{timeAgo(post.created_at)}</div>
+</div>
           </div>
 
           <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block' }} />
@@ -211,9 +215,14 @@ export default function PostDetail() {
                 {(c.profiles?.username || 'U')[0].toUpperCase()}
               </div>
               <div>
-                <span style={{ fontWeight: '600', fontSize: '13px', marginRight: '6px' }}>
-                  @{c.profiles?.username || 'unknown'}
-                </span>
+                <Link href={`/profile/${post.profiles?.username}`}>
+  <div style={{ fontWeight: '600', fontSize: '14px' }}>
+    @{post.profiles?.username || 'unknown'}
+  </div>
+  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+    {timeAgo(post.created_at)}
+  </div>
+</Link>
                 <span style={{ fontSize: '13px' }}>{c.content}</span>
               </div>
             </div>
