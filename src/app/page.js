@@ -187,8 +187,18 @@ const switchTab = (tab) => {
             </div>
 
             <Link href={`/post/${post.id}`}>
-              <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block', cursor: 'pointer' }} />
-            </Link>
+  {post.media_type === 'text' ? (
+    <div style={{
+      padding: '40px 20px', minHeight: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(135deg, var(--accent), var(--accent-secondary))',
+      color: 'white', fontSize: '18px', fontWeight: '700', textAlign: 'center', cursor: 'pointer'
+    }}>
+      {post.caption}
+    </div>
+  ) : (
+    <img src={post.media_url} alt={post.caption} style={{ width: '100%', display: 'block', cursor: 'pointer' }} />
+  )}
+</Link>
 
             <div style={{ padding: '10px 16px 4px', display: 'flex', alignItems: 'center', gap: '18px' }}>
               <button
@@ -208,7 +218,9 @@ const switchTab = (tab) => {
             </div>
 
             <div style={{ padding: '6px 16px 14px' }}>
-              <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>{post.caption}</p>
+  {post.media_type !== 'text' && (
+    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>{post.caption}</p>
+  )}
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: 0 }}>
                 {post.views} views
               </p>
