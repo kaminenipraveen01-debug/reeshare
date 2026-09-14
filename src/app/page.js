@@ -29,9 +29,10 @@ const [openMenuPostId, setOpenMenuPostId] = useState(null)
 const fetchPosts = async (currentUser, tab) => {
   setLoading(true)
   let query = supabase
-    .from('posts')
-    .select('*, profiles(username), likes(user_id)')
-    .order('created_at', { ascending: false })
+  .from('posts')
+  .select('*, profiles(username), likes(user_id)')
+  .order('is_boosted', { ascending: false })
+  .order('created_at', { ascending: false })
 
   if (tab === 'following' && currentUser) {
     const { data: followingData } = await supabase

@@ -68,19 +68,24 @@ export default function Wallet() {
     const { data: { user } } = await supabase.auth.getUser()
 
     const { error } = await supabase.from('withdrawals').insert({
-      user_id: user.id,
-      amount: profile.available_balance,
-      upi_or_bank_details: upiDetails,
-      status: 'pending',
-    })
+  user_id: user.id,
+  amount: profile.available_balance,
+  upi_or_bank_details: upiDetails,
+  status: 'pending',
+})
 
-    if (error) {
-      setMessage('Error: ' + error.message)
-    } else {
-      setMessage('Withdrawal request sent! You will receive the money after admin approval.')
-      setUpiDetails('')
-      fetchWalletData()
-    }
+if (error) {
+  setMessage('Error: ' + error.message)
+} else {
+  await supabase
+    .from('profiles')
+    .update({ available_balance: 0 })
+    .eq('id', user.id)
+
+  setMessage('Withdrawal request sent! You will receive the money after admin approval.')
+  setUpiDetails('')
+  fetchWalletData()
+}
 
     setRequesting(false)
   }
