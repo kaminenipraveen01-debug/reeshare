@@ -24,6 +24,13 @@ export default function Boost() {
     init()
   }, [postId])
 
+  useEffect(() => {
+  const script = document.createElement('script')
+  script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+  script.async = true
+  document.body.appendChild(script)
+}, [])
+
   const init = async () => {
     const { data: postData } = await supabase
       .from('posts')
@@ -40,55 +47,113 @@ export default function Boost() {
     setLoading(false)
   }
 
-  const handleBoost = async () => {
-    if (!selectedPlan) {
-      setMessage('Please select a plan')
-      return
-    }
+  const activateBoost = async (user) => {
+  const { error: boostError } = await supabase.from('boosts').insert({
+    post_id: postId,
+    user_id: user.id,
+    amount_paid: selectedPlan.amount,
+    target_views: selectedPlan.targetViews,
+    views_at_boost_start: post.views,
+    status: 'active',
+  })
 
-    setProcessing(true)
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    // NOTE: ఇది ఇప్పుడు test mode — నిజమైన Razorpay payment తర్వాత add చేద్దాం.
-    // ఇప్పుడు, payment success అయినట్టు simulate చేసి, boost record create చేస్తాం.
-
-    const { error: boostError } = await supabase.from('boosts').insert({
-      post_id: postId,
-      user_id: user.id,
-      amount_paid: selectedPlan.amount,
-      target_views: selectedPlan.targetViews,
-      views_at_boost_start: post.views,
-      status: 'active',
-    })
-
-    if (boostError) {
-      setMessage('Error: ' + boostError.message)
-      setProcessing(false)
-      return
-    }
-
-    const { error: updateError } = await supabase
-      .from('posts')
-      .update({
-        is_boosted: true,
-        boost_target_views: post.views + selectedPlan.targetViews,
-      })
-      .eq('id', postId)
-
-    if (updateError) {
-      setMessage('Error: ' + updateError.message)
-      setProcessing(false)
-      return
-    }
-
-    setMessage('Boost activated! Your post will now get priority in the feed.')
-    setTimeout(() => router.push(`/post/${postId}`), 1500)
+  if (boostError) {
+    setMessage('Error: ' + boostError.message)
+    setProcessing(false)
+    return
   }
+
+  const { error: updateError } = await supabase
+    .from('posts')
+    .update({
+      is_boosted: true,
+      boost_target_views: post.views + selectedPlan.targetViews,
+    })
+    .eq('id', postId)
+
+  if (updateError) {
+    setMessage('Error: ' + updateError.message)
+    setProcessing(false)
+    return
+  }
+
+  setMessage('Boost activated! Your post will now get priority in the feed.')
+  setTimeout(() => router.push(`/post/${postId}`), 1500)
+}
+
+const handleBoost = async () => {
+  if (!selectedPlan) {
+    setMessage('Please select a plan')
+    return
+  }
+
+  setProcessing(true)
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    router.push('/login')
+    return
+  }
+
+  // Step 1: Order create చేయడం (backend ద్వారా)
+  const orderRes = await fetch('/api/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: selectedPlan.amount }),
+  })
+  const order = await orderRes.json()
+
+  if (order.error) {
+    setMessage('Error creating order: ' + order.error)
+    setProcessing(false)
+    return
+  }
+
+  // Step 2: Razorpay Checkout popup తెరవడం
+  const options = {
+    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    amount: order.amount,
+    currency: 'INR',
+    name: 'Reeshare',
+    description: `Boost - ₹${selectedPlan.amount} plan`,
+    order_id: order.id,
+    handler: async function (response) {
+      // Step 3: Payment verify చేయడం
+      const verifyRes = await fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        }),
+      })
+      const verifyData = await verifyRes.json()
+
+      if (verifyData.valid) {
+        await activateBoost(user)
+      } else {
+        setMessage('Payment verification failed. Please contact support.')
+        setProcessing(false)
+      }
+    },
+    prefill: {
+      email: user.email,
+    },
+    theme: {
+      color: '#7B3DFF',
+    },
+    modal: {
+      ondismiss: function () {
+        setProcessing(false)
+        setMessage('Payment cancelled.')
+      },
+    },
+  }
+
+  const rzp = new window.Razorpay(options)
+  rzp.open()
+}
 
   if (loading) return <p style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Loading...</p>
   if (!post) return <p style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>Post not found</p>
